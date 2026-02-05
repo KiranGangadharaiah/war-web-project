@@ -9,7 +9,7 @@ pipeline {
         NEXUS_CREDENTIAL_ID = "nexus_creds"
         SSH_KEY_PATH = "/var/lib/jenkins/.ssh/jenkins_key"
         SONAR_HOST_URL = "http://13.203.93.143:9000/"
-        SONAR_CREDENTIAL_ID = "sonar_creds"  // Replace with your SonarQube credential ID
+        SONAR_CREDENTIAL_ID = "squ_ada197219642c7601d50c4d93c10ce7b492a3c2b"  // Replace with your SonarQube credential ID
     }
 
     tools {
