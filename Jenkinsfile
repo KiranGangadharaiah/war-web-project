@@ -24,11 +24,13 @@ pipeline {
             }
         }
 stage('SonarQube Analysis') {
+            stages {
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube Server') {
                     withCredentials([string(credentialsId: env.SONAR_CREDENTIAL_ID, variable: 'SONAR_TOKEN')]) {
                         sh """
-                            mvn sonar:sonar \
+                            mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=wwp \
                                 -Dsonar.host.url=${env.SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
