@@ -28,12 +28,12 @@ stage('SonarQube Analysis') {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube Server') {
-                    withCredentials([string(credentialsId: env.SONAR_CREDENTIAL_ID, variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: env.SONAR_CREDENTIAL_ID, variable: 'Sonar_token')]) {
                         sh """
                             mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=wwp \
                                 -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.login=${Sonar_token} \
                                 -Dsonar.java.binaries=target/classes
                         """
                     }
