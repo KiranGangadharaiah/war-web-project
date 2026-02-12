@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        TOMCAT_SERVER = "43.204.112.166"
+        TOMCAT_SERVER = "http://35.154.122.179:8080/"
         TOMCAT_USER = "ubuntu"
         NEXUS_URL = "3.109.203.221:8081"
         NEXUS_REPOSITORY = "maven-releases"
         NEXUS_CREDENTIAL_ID = "nexus_creds"
         SSH_KEY_PATH = "/var/lib/jenkins/.ssh/jenkins_key"
-        SONAR_HOST_URL = "http://52.66.216.180:9000/"
-        SONAR_CREDENTIAL_ID = "sonar_creds1"
+        SONAR_HOST_URL = "http://3.6.116.90:9000"
+        SONAR_CREDENTIAL_ID = "sonar_creds"  // Replace with your SonarQube credential ID
     }
 
     tools {
@@ -17,95 +17,59 @@ pipeline {
     }
 
     stages {
-
-        stage('Build WAR') {
+                stage('Build WAR') {
             steps {
                 sh 'mvn clean package -DskipTests'
                 archiveArtifacts artifacts: '**/target/*.war'
             }
         }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube Server') {
-                    withCredentials([
-                        string(credentialsId: "${SONAR_CREDENTIAL_ID}", variable: 'SONAR_TOKEN')
-                    ]) {
-                        sh """
-                        mvn clean verify sonar:sonar \
-                          -Dsonar.projectKey=wwp \
-                          -Dsonar.host.url=${SONAR_HOST_URL} \
-                          -Dsonar.login=${SONAR_TOKEN} \
-                          -Dsonar.java.binaries=target/classes
-                        """
-                    }
-                }
+stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQube Server') {
+            withCredentials([
+                string(credentialsId: 'sonar_token', variable: 'SONAR_TOKEN')
+            ]) {
+                sh '''
+                  mvn sonar:sonar \
+                  -Dsonar.projectKey=wwp \
+                  -Dsonar.projectName=wwp \
+                  -Dsonar.host.url=http://3.6.116.90:9000 \
+                  -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
+    }
+}
 
-        stage('Extract Version') {
-            steps {
-                script {
-                    env.ART_VERSION = sh(
-                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
-                        returnStdout: true
-                    ).trim()
-                }
-            }
-        }
-
-        stage('Publish to Nexus') {
+       stage('Extract Version') {
             steps {
                 script {
-                    def warFile = sh(
-                        script: 'find target -name "*.war" -print -quit',
-                        returnStdout: true
-                    ).trim()
-
-                    nexusArtifactUploader(
-                        nexusVersion: "nexus3",
-                        protocol: "http",
-                        nexusUrl: "${NEXUS_URL}",
-                        groupId: "koddas.web.war",
-                        artifactId: "wwp",
-                        version: "${ART_VERSION}",
-                        repository: "${NEXUS_REPOSITORY}",
-                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                        artifacts: [[
-                            artifactId: "wwp",
-                            file: warFile,
-                            type: "war"
-                        ]]
-                    )
+                    env.ART_VERSION = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
                 }
             }
         }
 
-        stage('Deploy to Tomcat') {
-            steps {
-                script {
-                    def warFile = sh(
-                        script: 'find target -name "*.war" -print -quit',
-                        returnStdout: true
-                    ).trim()
+    stage('Deploy to Tomcat') {
+    steps {
+        script {
+            sh """
+            scp -o StrictHostKeyChecking=no target/*.war ubuntu@35.154.122.179:/tmp/
 
-                    sh """
-                    scp -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no ${warFile} ${TOMCAT_USER}@${TOMCAT_SERVER}:/tmp/
-                    ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_SERVER} '
-                        sudo mv /tmp/*.war /opt/tomcat/webapps/ &&
-                        sudo systemctl restart tomcat
-                    '
-                    """
-                }
-            }
+            ssh -o StrictHostKeyChecking=no ubuntu@35.154.122.179 '
+            sudo mv /tmp/*.war /opt/tomcat/webapps/wwp.war
+            sudo systemctl restart tomcat
+            '
+            """
         }
+    }
+}
 
         stage('Display URLs') {
             steps {
                 script {
                     def appUrl = "http://${TOMCAT_SERVER}:8080/wwp-${ART_VERSION}"
                     def nexusUrl = "http://${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/koddas/web/war/wwp/${ART_VERSION}/wwp-${ART_VERSION}.war"
-
+                    
                     echo "🌐 Application URL: ${appUrl}"
                     echo "📦 Nexus Artifact URL: ${nexusUrl}"
                 }
