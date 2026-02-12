@@ -35,7 +35,6 @@ stage('SonarQube Analysis') {
                   -Dsonar.projectName=wwp \
                   -Dsonar.host.url=http://3.6.116.90:9000 \
                   -Dsonar.login=$SONAR_TOKEN
-                  -Dsonar.java.binaries=target/classes
                 '''
             }
         }
