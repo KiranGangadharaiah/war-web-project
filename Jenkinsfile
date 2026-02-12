@@ -4,7 +4,7 @@ pipeline {
     environment {
         TOMCAT_SERVER = "http://35.154.122.179:8080/"
         TOMCAT_USER = "ubuntu"
-        NEXUS_URL = "3.109.203.221:8081"
+        NEXUS_URL = "35.154.0.18:8081"
         NEXUS_REPOSITORY = "maven-releases"
         NEXUS_CREDENTIAL_ID = "nexus_creds"
         SSH_KEY_PATH = "/var/lib/jenkins/.ssh/jenkins_key"
@@ -48,6 +48,32 @@ stage('SonarQube Analysis') {
                 }
             }
         }
+
+           stage('Publish to Nexus') {
+            steps {
+                script {
+                    echo "⬆️ Uploading WAR to Nexus repository..."
+                    def warFile = sh(script: 'find target -name "*.war" -print -quit', returnStdout: true).trim()
+                    echo "Uploading file: ${warFile}"
+
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: "${NEXUS_URL}",
+                        groupId: 'koddas.web.war',
+                        version: "${ART_VERSION}",
+                        repository: "${NEXUS_REPOSITORY}",
+                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
+                        artifacts: [[
+                            artifactId: 'wwp',
+                            classifier: '',
+                            file: warFile,
+                            type: 'war'
+                        ]]
+                    )
+                }
+            }
+        }     
 
     stage('Deploy to Tomcat') {
     steps {
