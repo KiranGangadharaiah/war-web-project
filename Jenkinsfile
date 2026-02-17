@@ -64,18 +64,18 @@ pipeline {
 
         /* ================= VERSION ================= */
 
-        // stage('Extract Version') {
-        //     steps {
-        //         script {
-        //             env.ART_VERSION = sh(
-        //                 script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
-        //                 returnStdout: true
-        //             ).trim()
-        //         }
+        stage('Extract Version') {
+            steps {
+                script {
+                    env.ART_VERSION = sh(
+                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
+                        returnStdout: true
+                    ).trim()
+                }
 
-        //         echo "Project Version: ${ART_VERSION}"
-        //     }
-        // }
+                echo "Project Version: ${ART_VERSION}"
+            }
+        }
 
         /* ================= NEXUS ================= */
 
