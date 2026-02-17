@@ -42,73 +42,73 @@ pipeline {
 
         /* ================= SONAR ================= */
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube Server') {
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         withSonarQubeEnv('SonarQube Server') {
 
-                    withCredentials([
-                        string(credentialsId: 'sonar_token', variable: 'SONAR_TOKEN')
-                    ]) {
+        //             withCredentials([
+        //                 string(credentialsId: 'sonar_token', variable: 'SONAR_TOKEN')
+        //             ]) {
 
-                        sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=wwp \
-                        -Dsonar.projectName=wwp \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=$SONAR_TOKEN
-                        """
-                    }
-                }
-            }
-        }
+        //                 sh """
+        //                 mvn sonar:sonar \
+        //                 -Dsonar.projectKey=wwp \
+        //                 -Dsonar.projectName=wwp \
+        //                 -Dsonar.host.url=${SONAR_HOST_URL} \
+        //                 -Dsonar.login=$SONAR_TOKEN
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
         /* ================= VERSION ================= */
 
-        stage('Extract Version') {
-            steps {
-                script {
-                    env.ART_VERSION = sh(
-                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
-                        returnStdout: true
-                    ).trim()
-                }
+        // stage('Extract Version') {
+        //     steps {
+        //         script {
+        //             env.ART_VERSION = sh(
+        //                 script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
+        //                 returnStdout: true
+        //             ).trim()
+        //         }
 
-                echo "Project Version: ${ART_VERSION}"
-            }
-        }
+        //         echo "Project Version: ${ART_VERSION}"
+        //     }
+        // }
 
         /* ================= NEXUS ================= */
 
-        stage('Publish to Nexus') {
-            steps {
-                script {
+        // stage('Publish to Nexus') {
+        //     steps {
+        //         script {
 
-                    def warFile = sh(
-                        script: 'find target -name "*.war" -print -quit',
-                        returnStdout: true
-                    ).trim()
+        //             def warFile = sh(
+        //                 script: 'find target -name "*.war" -print -quit',
+        //                 returnStdout: true
+        //             ).trim()
 
-                    echo "Uploading: ${warFile}"
+        //             echo "Uploading: ${warFile}"
 
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: "${NEXUS_URL}",
-                        groupId: 'koddas.web.war',
-                        version: "${ART_VERSION}",
-                        repository: "${NEXUS_REPOSITORY}",
-                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
+        //             nexusArtifactUploader(
+        //                 nexusVersion: 'nexus3',
+        //                 protocol: 'http',
+        //                 nexusUrl: "${NEXUS_URL}",
+        //                 groupId: 'koddas.web.war',
+        //                 version: "${ART_VERSION}",
+        //                 repository: "${NEXUS_REPOSITORY}",
+        //                 credentialsId: "${NEXUS_CREDENTIAL_ID}",
 
-                        artifacts: [[
-                            artifactId: 'wwp',
-                            classifier: '',
-                            file: warFile,
-                            type: 'war'
-                        ]]
-                    )
-                }
-            }
-        }
+        //                 artifacts: [[
+        //                     artifactId: 'wwp',
+        //                     classifier: '',
+        //                     file: warFile,
+        //                     type: 'war'
+        //                 ]]
+        //             )
+        //         }
+        //     }
+        // }
 
         /* ================= DOCKER BUILD ================= */
 
@@ -174,40 +174,22 @@ pipeline {
 
         /* ================= TOMCAT VM DEPLOY ================= */
 
-        stage('Deploy to Tomcat VM') {
-            steps {
+        // stage('Deploy to Tomcat VM') {
+        //     steps {
 
-                sh """
-                scp -o StrictHostKeyChecking=no target/*.war \
-                ${TOMCAT_USER}@${TOMCAT_SERVER}:/tmp/
+        //         sh """
+        //         scp -o StrictHostKeyChecking=no target/*.war \
+        //         ${TOMCAT_USER}@${TOMCAT_SERVER}:/tmp/
 
-                ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_SERVER} '
-                sudo mv /tmp/*.war /opt/tomcat/webapps/wwp.war
-                sudo systemctl restart tomcat
-                '
-                """
-            }
-        }
+        //         ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_SERVER} '
+        //         sudo mv /tmp/*.war /opt/tomcat/webapps/wwp.war
+        //         sudo systemctl restart tomcat
+        //         '
+        //         """
+        //     }
+        // }
 
-        /* ================= URL DISPLAY ================= */
-
-        stage('Display URLs') {
-            steps {
-                script {
-
-                    def nexusUrl =
-                    "http://${NEXUS_URL}/repository/${NEXUS_REPOSITORY}/koddas/web/war/wwp/${ART_VERSION}/wwp-${ART_VERSION}.war"
-
-                    def dockerUrl =
-                    "https://hub.docker.com/r/${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE}"
-
-                    echo "📦 Nexus Artifact: ${nexusUrl}"
-                    echo "🐳 Docker Hub: ${dockerUrl}"
-                    echo "☸️ K8s Deployment: ${K8S_DEPLOYMENT}"
-                }
-            }
-        }
-    }
+     }
 
     post {
 
