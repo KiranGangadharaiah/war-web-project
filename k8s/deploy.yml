@@ -1,84 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mywarweb-deployment
+  name: wwp-deployment
   labels:
-    app: mywarweb
+    app: wwp
 spec:
   replicas: 2
+
   selector:
     matchLabels:
-      app: mywarweb
+      app: wwp
+
   template:
     metadata:
       labels:
-        app: mywarweb
+        app: wwp
+
     spec:
       containers:
-      - name: mywarweb
-        image: bussar/mywarweb:latest
+      - name: wwp-container
+        image: kirangangadhar12/wwp-app:latest
+
+        imagePullPolicy: Always
+
         ports:
         - containerPort: 8080
----
-# ClusterIP Service (default internal access)
-apiVersion: v1
-kind: Service
-metadata:
-  name: mywarweb-clusterip
-spec:
-  selector:
-    app: mywarweb
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: ClusterIP
----
-# NodePort Service (access via Node IP + NodePort)
-apiVersion: v1
-kind: Service
-metadata:
-  name: mywarweb-nodeport
-spec:
-  selector:
-    app: mywarweb
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-      nodePort: 30080   # fixed NodePort
-  type: NodePort
----
-# LoadBalancer Service (works in cloud environments)
-apiVersion: v1
-kind: Service
-metadata:
-  name: mywarweb-loadbalancer
-spec:
-  selector:
-    app: mywarweb
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer
----
-# Ingress Resource
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: mywarweb-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: mywarweb.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: mywarweb-clusterip
-            port:
-              number: 80
+
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
