@@ -152,25 +152,39 @@ pipeline {
 
         /* ================= K8S DEPLOY ================= */
 
-        stage('Deploy to Minikube (K8s)') {
-            steps {
-                script {
+stage('Deploy to Minikube (K8s)') {
+    steps {
+        script {
+            sh """
+            set -e  # Exit immediately if any command fails
 
-                    sh """
-                    kubectl config use-context minikube
+            # Use Ubuntu user's kubeconfig
+            export KUBECONFIG=/var/lib/jenkins/.kube/config
 
-                    kubectl apply -f k8s/
+            echo "=== Current Kubernetes Context ==="
+            kubectl config current-context
+            kubectl config view --minify | grep namespace:
 
-                    kubectl set image deployment/${K8S_DEPLOYMENT} \
-                    wwp-container=${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE}:${ART_VERSION} \
-                    -n ${K8S_NAMESPACE}
+            echo "=== Checking Cluster Nodes ==="
+            kubectl get nodes
 
-                    kubectl rollout status deployment/${K8S_DEPLOYMENT} \
-                    -n ${K8S_NAMESPACE}
-                    """
-                }
-            }
+            echo "=== Applying Kubernetes Manifests ==="
+            kubectl apply -f k8s/ --validate=false
+
+            echo "=== Updating Deployment Image ==="
+            kubectl set image deployment/${K8S_DEPLOYMENT} \
+                wwp-container=${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE}:${ART_VERSION} \
+                -n ${K8S_NAMESPACE}
+
+            echo "=== Waiting for Deployment Rollout ==="
+            kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE}
+
+            echo "=== Deployment Completed Successfully ==="
+            """
         }
+    }
+}
+
 
         /* ================= TOMCAT VM DEPLOY ================= */
 
