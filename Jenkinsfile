@@ -156,9 +156,9 @@ stage('Deploy to Minikube (K8s)') {
     steps {
         script {
             sh """
-            set -e  # Exit immediately if any command fails
+            set -e  # Exit on any command failure
 
-            # Use Ubuntu user's kubeconfig
+            # Use Jenkins-accessible kubeconfig
             export KUBECONFIG=/var/lib/jenkins/.kube/config
 
             echo "=== Current Kubernetes Context ==="
@@ -184,6 +184,7 @@ stage('Deploy to Minikube (K8s)') {
         }
     }
 }
+
 
 
         /* ================= TOMCAT VM DEPLOY ================= */
