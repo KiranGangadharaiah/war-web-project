@@ -1,5 +1,3 @@
-# About this project
-
 ## testing
 
 This project is a simple demo web application using Java annotations. It
