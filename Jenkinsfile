@@ -33,7 +33,7 @@ stage('SonarQube Analysis') {
                   mvn sonar:sonar \
                   -Dsonar.projectKey=wwp \
                   -Dsonar.projectName=wwp \
-                  -Dsonar.host.url=http://3.6.116.90:9000 \
+                  -Dsonar.host.url=$SONAR_HOST_URL \
                   -Dsonar.login=$SONAR_TOKEN
                 '''
             }
@@ -79,9 +79,9 @@ stage('SonarQube Analysis') {
     steps {
         script {
             sh """
-            scp -o StrictHostKeyChecking=no target/*.war ubuntu@35.154.122.179:/tmp/
+            scp -o StrictHostKeyChecking=no target/*.war ubuntu@$TOMCAT_SERVER:/tmp/
 
-            ssh -o StrictHostKeyChecking=no ubuntu@35.154.122.179 '
+            ssh -o StrictHostKeyChecking=no ubuntu@$TOMCAT_SERVER '
             sudo mv /tmp/*.war /opt/tomcat/webapps/wwp.war
             sudo systemctl restart tomcat
             '
